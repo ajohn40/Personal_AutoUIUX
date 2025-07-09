@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Version Ranking</title>
+</head>
+<body>
+  <h1>Test Versions</h1>
+  <ul>
+    <li><a href="http://localhost:3004" target="_blank">🌐 Version 1</a></li>
+    <li><a href="http://localhost:3005" target="_blank">🌐 Version 2</a></li>
+    <li><a href="http://localhost:3006" target="_blank">🌐 Version 3</a></li>
+  </ul>
+
+  <h2>Rank the Versions <span id="iterationCount">(Iteration 0)</span></h2>
+  <form id="rankForm">
+    <label>1st:
+      <select name="first">
+        <option value="1">Version 1</option>
+        <option value="2">Version 2</option>
+        <option value="3">Version 3</option>
+      </select>
+    </label><br><br>
+
+    <label>2nd:
+      <select name="second">
+        <option value="1">Version 1</option>
+        <option value="2">Version 2</option>
+        <option value="3">Version 3</option>
+      </select>
+    </label><br><br>
+
+    <label>3rd:
+      <select name="third">
+        <option value="1">Version 1</option>
+        <option value="2">Version 2</option>
+        <option value="3">Version 3</option>
+      </select>
+    </label><br><br>
+
+    <button type="submit">Submit Ranking</button>
+  </form>
+
+  <p id="message" style="font-weight: bold;"></p>
+
+  <hr>
+
+  <h2>Run Another Iteration</h2>
+  <form id="iterationForm">
+    <label>Select Version:
+      <select name="version" required>
+        <option value="1">Version 1</option>
+        <option value="2">Version 2</option>
+        <option value="3">Version 3</option>
+      </select>
+    </label><br><br>
+
+    <label>Describe any improvements you want in the next iteration:</label><br>
+    <textarea name="userImprovements" rows="4" cols="60" placeholder="e.g., Improve font contrast, reduce load time..."></textarea><br><br>
+
+    <button type="submit">Run Iteration</button>
+  </form>
+
+  <p id="iterationMessage" style="font-weight: bold;"></p>
+
+  <script>
+    // Submit ranking form
+    document.getElementById('rankForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      const data = {
+        first: formData.get('first'),
+        second: formData.get('second'),
+        third: formData.get('third')
+      };
+
+      try {
+        const response = await fetch('/submit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+
+        const result = await response.text();
+        document.getElementById('message').innerText = result;
+        updateIterationDisplay();
+      } catch (err) {
+        document.getElementById('message').innerText = '❌ Error submitting preferences.';
+        console.error(err);
+      }
+
+      e.target.reset();
+    });
+
+    // Submit run iteration form
+    document.getElementById('iterationForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      const version = formData.get('version');
+      const userImprovements = formData.get('userImprovements');
+
+      try {
+        const response = await fetch('/run-iteration', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ version, userImprovements })
+        });
+
+        const result = await response.text();
+        document.getElementById('iterationMessage').innerText = result;
+        updateIterationDisplay();
+      } catch (err) {
+        document.getElementById('iterationMessage').innerText = '❌ Error running iteration.';
+        console.error(err);
+      }
+    });
+
+    async function updateIterationDisplay() {
+      try {
+        const res = await fetch('/iteration-count');
+        const data = await res.json();
+        document.getElementById('iterationCount').innerText = `(Iteration ${data.iteration})`;
+      } catch (err) {
+        document.getElementById('iterationCount').innerText = '(Iteration ?)';
+      }
+    }
+
+    // Initialize iteration count on page load
+    updateIterationDisplay();
+  </script>
+</body>
+</html>
